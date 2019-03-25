@@ -48,6 +48,30 @@ Une fois le fichier créé, assurez-vous que Linux le prenne bien en compte :
 
     sudo udevadm control --reload
 
+### Vérifier la présence de `libpng12`
+
+Les versions les plus récentes de Debian utilisent `libpng16`, mais Quartus
+Prime 18.1 utilise `libpng12` et refusera de se lancer si cette bibliothèque
+n’est pas présente.
+
+Pour vérifier sa présence :
+
+    ls -l /usr/lib/x86_64/libpng*
+
+Si `libpng12.so.0` n’apparaît pas, il faut l’installer :
+
+    sudo apt install libpng12-0
+
+Si cette commande échoue, il reste la possibilité de télécharger la version
+Ubuntu de ce package. Elle devrait s’installer et fonctionner sans problème.
+
+Récupérer le fichier sur la
+[page de téléchargement de `libpng12-0_1.2.54-1ubuntu1.1_amd64.deb` pour l'architecture AMD64](https://packages.ubuntu.com/xenial/amd64/libpng12-0/download)
+
+Une fois récupéré, exécuter la commande :
+
+    sudo apt install ./libpng12-0_1.2.54-1ubuntu1.1_amd64.deb
+
 ### Désinstaller `brltty`
 
 Pour pouvoir accéder à la console système du DE0 depuis le PC en USB, le port
