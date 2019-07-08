@@ -48,6 +48,37 @@ Une fois le fichier créé, assurez-vous que Linux le prenne bien en compte :
 
     sudo udevadm control --reload
 
+### Installer le support des applications 32 bits pour ModelSim
+
+Quartus Prime tourne normalement en 64 bits mais la version gratuite de ModelSim
+(ModelSim ASE ou ModelSim Altera Stater Edition) tourne encore en 32 bits.
+
+L’installation est un peu plus fastidieuse.
+
+Pour installer le support 32 bits nécessaire à ModelSim ASE :
+
+    sudo dpkg --add-architecture i386
+    sudo apt update
+    sudo apt install lib32z1 lib32stdc++6 lib32gcc1 gcc-multilib g++-multilib
+    sudo apt install libx11-6:i386 libxext6:i386 libxft2:i386 libncurses5:i386 libstdc++6:i386
+    sudo apt-get build-dep -a i386 libfreetype6
+
+Le reste des opérations considère que ModelSim a été installé dans un
+sous-répertoire de ~/intelFPGA (par exemple
+`/home/fred/intelFPGA/18.1/modelsim_ase`)
+
+Il faut maintenant compiler une ancienne version de FreeType :
+
+    # Récupération du code source de FreeType 2.4.12
+    cd ~/intelFPGA
+    wget http://download.savannah.gnu.org/releases/freetype/freetype-2.4.12.tar.bz2
+    tar xjvf freetype-2.4.12.tar.bz2
+    cd freetype-2.4.12
+
+    # Compilation
+    ./configure --build=i686-pc-linux-gnu "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32"
+    make -j8
+
 ### Vérifier la présence de `libpng12`
 
 Les versions les plus récentes de Debian utilisent `libpng16`, mais Quartus
@@ -208,6 +239,20 @@ Notes :
 - Les fichiers sont placés dans `~/intelFPGA_lite/18.1/quartus`.
 - Pour lancer Quartus Prime : `~/intelFPGA_lite/18.1/quartus/bin/quartus`.
 
+### Patcher ModelSim Altera Starter Edition
+
+Sur le PC, se placer dans le répertoire de ModelSim ASE et donner les droits en
+écriture au fichier `vco` :
+
+    cd ~/intelFPGA/18.1/modelsim_ase
+    chmod 755 vco
+
+Avec un éditeur de texte, ouvrir le fichier `vco`, repérer la ligne `doatenv=0`
+et ajouter les lignes suivantes juste en dessous :
+
+    vco="linux"
+    export LD_LIBRARY_PATH=$HOME/intelFPGA/freetype-2.4.12/objs/.libs:$LD_LIBRARY_PATH
+
 Configuration du DE0
 --------------------
 
@@ -329,4 +374,25 @@ Dans la console système, taper la commande :
     dd if=image.rbf of=/dev/fpga0
 
 L’image est alors chargée et immédiatement active.
+
+Erreurs avec QSys
+-----------------
+
+Si l’erreur suivante apparaît :
+
+    Error: The auto-constraining script was not able to detect any instance for
+    core < hps_sdram_p0 >
+
+Cela veut simplement dire que vous avez oublié d’exécuter le script qui assigne
+les broches nécessaires au composant QSys que vous utilisez.
+
+Aller dans le menu Tools → TCL Scripts… et exécuter le script :
+
+    synthesis/submodules/hps_sdram_p0_pin_assignments.tcl
+
+-----
+
+https://forums.intel.com/s/question/0D50P00003yyPoESAU/how-to-include-a-hps-with-block-symbol-file
+
+Ajouter uniquement le fichier *.qip dans les fichiers du projet !
 
